@@ -114,13 +114,13 @@ def play_game():
         st.session_state.hand = draw_cards(5)
 
     st.subheader("Your Hand:")
-    card_columns = st.beta_columns(5)
+    columns = st.beta_columns(5)
     with st.beta_container():
         for i, card in enumerate(st.session_state.hand):
             if i in st.session_state.selected_indices:
-                card_columns[i].write("[Selected]", card[0], "of", card[1])
+                columns[i].write("[Selected]", card[0], "of", card[1])
             else:
-                card_columns[i].write(card[0], "of", card[1])
+                columns[i].write(card[0], "of", card[1])
 
     selected_cards = st.multiselect(
         "Select the cards to hold",
