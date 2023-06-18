@@ -65,21 +65,24 @@ def play_game():
         hand = draw_cards(5)
 
         st.subheader("Your Hand:")
-        for card in hand:
-            st.write(card[0], "of", card[1])
 
-        hold = st.text_input("Select the cards to hold (e.g., 134, 25). Leave blank to keep all cards:")
-        if hold:
-            try:
-                hold = [int(card) for card in hold if card.isdigit()]
-                for card in hold:
-                    if card < 1 or card > 5:
-                        raise ValueError
-            except ValueError:
-                st.error("Invalid input. Please enter valid card numbers.")
-                return
+        selected_cards = st.multiselect(
+            "Select the cards to hold",
+            [f"{card[0]} of {card[1]}" for card in hand],
+            []
+        )
+
+        selected_indices = [i for i, card in enumerate(hand) if f"{card[0]} of {card[1]}" in selected_cards]
+
+        for i, card in enumerate(hand):
+            if i in selected_indices:
+                st.write("[Selected]", card[0], "of", card[1])
+            else:
+                st.write(card[0], "of", card[1])
+
+        if len(selected_indices) > 0:
             for i in range(5):
-                if i + 1 not in hold:
+                if i not in selected_indices:
                     hand[i] = draw_cards(1)[0]  # Draw a new card for unheld cards
 
         hand_values = [get_card_value(card) for card in hand]
