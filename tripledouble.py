@@ -4,6 +4,22 @@ import random
 SUITS = ["Hearts", "Diamonds", "Clubs", "Spades"]
 RANKS = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
 
+PAY_TABLE = {
+    "Royal Flush": {5: 800, 4: 250},
+    "Four Aces with a 2, 3 or 4 Kicker": 800,
+    "Four Twos, Threes or Fours with an Ace, Two, Three or Four Kicker": 400,
+    "Four Aces with a Five-King Kicker": 160,
+    "Straight Flush": 50,
+    "Four of a Kind 2’s, 3’s and 4’s with a Five-King Kicker": 80,
+    "Four of a Kind 5’s through Kings": 50,
+    "Full House": 9,
+    "Flush": 7,
+    "Straight": 4,
+    "Three of a Kind": 2,
+    "Two Pair": 1,
+    "Pair of Jacks or Higher": 1,
+}
+
 def draw_cards(num_cards):
     """Draws the specified number of cards from a standard 52-card deck."""
     deck = [(rank, suit) for suit in SUITS for rank in RANKS]
@@ -21,39 +37,66 @@ def get_card_value(card):
 def get_hand_score(hand):
     """Calculates the score of a given hand."""
     ranks = [card[0] for card in hand]
+    suits = [card[1] for card in hand]
     ranks.sort()
 
-    # Check for four-of-a-kind
-    if ranks.count(ranks[2]) == 4:
-        return get_card_value(hand[2]) * 100
+    # Check for Royal Flush
+    if all(suit == suits[0] for suit in suits) and ranks == ["10", "Jack", "Queen", "King", "Ace"]:
+        return "Royal Flush"
 
-    # Check for full house
-    if ranks.count(ranks[1]) in (2, 3):
-        if ranks.count(ranks[3]) == 3:
-            return get_card_value(hand[2]) * 10 + get_card_value(hand[4])
-        elif ranks.count(ranks[3]) == 2:
-            return get_card_value(hand[2]) * 10 + get_card_value(hand[0])
+    # Check for Four Aces with a 2, 3, or 4 Kicker
+    if ranks.count("Ace") == 4 and any(rank in ranks for rank in ["2", "3", "4"]):
+        return "Four Aces with a 2, 3 or 4 Kicker"
 
-    # Check for three-of-a-kind
-    if ranks.count(ranks[2]) == 3:
-        return get_card_value(hand[2]) * 10
+    # Check for Four Twos, Threes, or Fours with an Ace, Two, Three, or Four Kicker
+    if ranks.count("2") == 4 and any(rank in ranks for rank in ["Ace", "2", "3", "4"]):
+        return "Four Twos, Threes or Fours with an Ace, Two, Three or Four Kicker"
 
-    # Check for two pair
-    if ranks.count(ranks[1]) == 2 and ranks.count(ranks[3]) == 2:
-        return get_card_value(hand[3]) * 10 + get_card_value(hand[1])
+    # Check for Four Aces with a Five-King Kicker
+    if ranks.count("Ace") == 4 and all(rank in ranks for rank in ["5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]):
+        return "Four Aces with a Five-King Kicker"
 
-    # Check for pair
-    for i in range(4):
-        if ranks[i] == ranks[i + 1]:
-            return get_card_value(hand[i])
+    # Check for Straight Flush
+    if all(suit == suits[0] for suit in suits) and ranks == RANKS[RANKS.index(ranks[0]):RANKS.index(ranks[0])+5]:
+        return "Straight Flush"
 
-    # Check for flush
-    suits = set([card[1] for card in hand])
-    if len(suits) == 1:
-        return 50
+    # Check for Four of a Kind 2’s, 3’s, and 4’s with a Five-King Kicker
+    if ranks.count("2") == 4 or ranks.count("3") == 4 or ranks.count("4") == 4:
+        if all(rank in ranks for rank in ["5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]):
+            return "Four of a Kind 2’s, 3’s and 4’s with a Five-King Kicker"
+
+    # Check for Four of a Kind 5’s through Kings
+    if any(ranks.count(rank) == 4 for rank in ["5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]):
+        return "Four of a Kind 5’s through Kings"
+
+    # Check for Full House
+    if ranks.count(ranks[0]) == 2 and ranks.count(ranks[-1]) == 3:
+        return "Full House"
+    if ranks.count(ranks[0]) == 3 and ranks.count(ranks[-1]) == 2:
+        return "Full House"
+
+    # Check for Flush
+    if all(suit == suits[0] for suit in suits):
+        return "Flush"
+
+    # Check for Straight
+    if ranks == RANKS[RANKS.index(ranks[0]):RANKS.index(ranks[0])+5]:
+        return "Straight"
+
+    # Check for Three of a Kind
+    if ranks.count(ranks[0]) == 3 or ranks.count(ranks[2]) == 3 or ranks.count(ranks[-1]) == 3:
+        return "Three of a Kind"
+
+    # Check for Two Pair
+    if ranks.count(ranks[0]) == 2 and ranks.count(ranks[-1]) == 2:
+        return "Two Pair"
+
+    # Check for Pair of Jacks or Higher
+    if ranks.count("Jack") == 2 or ranks.count("Queen") == 2 or ranks.count("King") == 2 or ranks.count("Ace") == 2:
+        return "Pair of Jacks or Higher"
 
     # No scoring hand
-    return 0
+    return "No Win"
 
 def play_game():
     """Plays a single round of Triple Double Bonus Poker."""
@@ -83,7 +126,7 @@ def play_game():
         if len(selected_indices) > 0:
             for i in range(5):
                 if i not in selected_indices:
-                    hand[i] = draw_cards(1)[0]  # Draw a new card for unheld cards
+                    hand[i] = draw_cards(1)[0]
 
         hand_values = [get_card_value(card) for card in hand]
         score = get_hand_score(hand)
@@ -92,8 +135,13 @@ def play_game():
         for i in range(5):
             st.write(hand[i][0], "of", hand[i][1], "(Value:", hand_values[i], ")")
 
-        if score > 0:
-            winnings = score * bet
+        if score != "No Win":
+            if isinstance(PAY_TABLE[score], dict):
+                payout = PAY_TABLE[score].get(len(selected_indices), 0)
+            else:
+                payout = PAY_TABLE[score]
+
+            winnings = payout * bet
             st.success("Congratulations! You won {} chips.".format(winnings))
         else:
             winnings = -bet
