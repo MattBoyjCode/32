@@ -1,3 +1,4 @@
+import streamlit as st
 import random
 
 SUITS = ["Hearts", "Diamonds", "Clubs", "Spades"]
@@ -56,32 +57,18 @@ def get_hand_score(hand):
 
 def play_game():
     """Plays a single round of Triple Double Bonus Poker."""
-    print("Welcome to Triple Double Bonus Poker!\n")
+    st.title("Triple Double Bonus Poker")
 
-    while True:
-        # Prompt the player to place a bet
-        bet = input("Place your bet (or 'q' to quit): ")
-        if bet.lower() == "q":
-            break
-
-        try:
-            bet = int(bet)
-            if bet <= 0:
-                print("Please enter a positive bet.")
-                continue
-        except ValueError:
-            print("Invalid input. Please enter a number.")
-            continue
-
-        # Draw the cards
+    bet = st.number_input("Place your bet", min_value=1, step=1)
+    if st.button("Deal"):
+        st.write("Dealing cards...")
         hand = draw_cards(5)
-        print("Your initial hand:")
-        for card in hand:
-            print(card[0], "of", card[1])
-        print()
 
-        # Prompt the player to hold cards
-        hold = input("Select the cards to hold (e.g., 134, 25). Leave blank to keep all cards: ")
+        st.subheader("Your Hand:")
+        for card in hand:
+            st.write(card[0], "of", card[1])
+
+        hold = st.text_input("Select the cards to hold (e.g., 134, 25). Leave blank to keep all cards:")
         if hold:
             try:
                 hold = [int(card) for card in hold if card.isdigit()]
@@ -89,26 +76,24 @@ def play_game():
                     if card < 1 or card > 5:
                         raise ValueError
             except ValueError:
-                print("Invalid input. Please enter valid card numbers.")
-                continue
+                st.error("Invalid input. Please enter valid card numbers.")
+                return
             for i in range(5):
                 if i + 1 not in hold:
                     hand[i] = draw_cards(1)[0]  # Draw a new card for unheld cards
 
-        # Calculate the score
         hand_values = [get_card_value(card) for card in hand]
         score = get_hand_score(hand)
 
-        # Display the final hand and score
-        print("Your final hand:")
+        st.subheader("Final Hand:")
         for i in range(5):
-            print(hand[i][0], "of", hand[i][1], "(Value:", hand_values[i], ")")
+            st.write(hand[i][0], "of", hand[i][1], "(Value:", hand_values[i], ")")
+
         if score > 0:
             winnings = score * bet
-            print("Congratulations! You won {} chips.".format(winnings))
+            st.success("Congratulations! You won {} chips.".format(winnings))
         else:
             winnings = -bet
-            print("Sorry, you lost. Better luck next time.")
-        print()
+            st.error("Sorry, you lost. Better luck next time.")
 
 play_game()
