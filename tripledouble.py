@@ -1,5 +1,6 @@
 import streamlit as st
 import random
+from streamlit import caching
 
 SUITS = ["Hearts", "Diamonds", "Clubs", "Spades"]
 RANKS = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
@@ -102,49 +103,57 @@ def play_game():
     """Plays a single round of Triple Double Bonus Poker."""
     st.title("Triple Double Bonus Poker")
 
+    # Create session state
+    if "hand" not in st.session_state:
+        st.session_state.hand = draw_cards(5)
+        st.session_state.selected_indices = []
+
     bet = st.number_input("Place your bet", min_value=1, step=1)
+
     if st.button("Deal"):
-        st.write("Dealing cards...")
-        hand = draw_cards(5)
+        st.session_state.selected_indices = []
+        st.session_state.hand = draw_cards(5)
 
-        st.subheader("Your Hand:")
-
-        selected_cards = st.multiselect(
-            "Select the cards to hold",
-            [f"{card[0]} of {card[1]}" for card in hand],
-            []
-        )
-
-        selected_indices = [i for i, card in enumerate(hand) if f"{card[0]} of {card[1]}" in selected_cards]
-
-        for i, card in enumerate(hand):
-            if i in selected_indices:
-                st.write("[Selected]", card[0], "of", card[1])
-            else:
-                st.write(card[0], "of", card[1])
-
-        if len(selected_indices) > 0:
-            for i in range(5):
-                if i not in selected_indices:
-                    hand[i] = draw_cards(1)[0]
-
-        hand_values = [get_card_value(card) for card in hand]
-        score = get_hand_score(hand)
-
-        st.subheader("Final Hand:")
-        for i in range(5):
-            st.write(hand[i][0], "of", hand[i][1], "(Value:", hand_values[i], ")")
-
-        if score != "No Win":
-            if isinstance(PAY_TABLE[score], dict):
-                payout = PAY_TABLE[score].get(len(selected_indices), 0)
-            else:
-                payout = PAY_TABLE[score]
-
-            winnings = payout * bet
-            st.success("Congratulations! You won {} chips.".format(winnings))
+    st.subheader("Your Hand:")
+    for i, card in enumerate(st.session_state.hand):
+        if i in st.session_state.selected_indices:
+            st.write("[Selected]", card[0], "of", card[1])
         else:
-            winnings = -bet
-            st.error("Sorry, you lost. Better luck next time.")
+            st.write(card[0], "of", card[1])
+
+    selected_cards = st.multiselect(
+        "Select the cards to hold",
+        [f"{card[0]} of {card[1]}" for card in st.session_state.hand],
+        []
+    )
+
+    st.session_state.selected_indices = [i for i, card in enumerate(st.session_state.hand) if
+                                          f"{card[0]} of {card[1]}" in selected_cards]
+
+    for i in range(5):
+        if i not in st.session_state.selected_indices:
+            st.session_state.hand[i] = draw_cards(1)[0]
+
+    hand_values = [get_card_value(card) for card in st.session_state.hand]
+    score = get_hand_score(st.session_state.hand)
+
+    st.subheader("Final Hand:")
+    for i in range(5):
+        st.write(st.session_state.hand[i][0], "of", st.session_state.hand[i][1], "(Value:", hand_values[i], ")")
+
+    if score != "No Win":
+        if isinstance(PAY_TABLE[score], dict):
+            payout = PAY_TABLE[score].get(len(st.session_state.selected_indices), 0)
+        else:
+            payout = PAY_TABLE[score]
+
+        winnings = payout * bet
+        st.success("Congratulations! You won {} chips.".format(winnings))
+    else:
+        winnings = -bet
+        st.error("Sorry, you lost. Better luck next time.")
+
+    # Disable Streamlit caching
+    caching.clear_cache()
 
 play_game()
