@@ -114,11 +114,13 @@ def play_game():
         st.session_state.hand = draw_cards(5)
 
     st.subheader("Your Hand:")
-    for i, card in enumerate(st.session_state.hand):
-        if i in st.session_state.selected_indices:
-            st.write("[Selected]", card[0], "of", card[1])
-        else:
-            st.write(card[0], "of", card[1])
+    card_columns = st.beta_columns(5)
+    with st.beta_container():
+        for i, card in enumerate(st.session_state.hand):
+            if i in st.session_state.selected_indices:
+                card_columns[i].write("[Selected]", card[0], "of", card[1])
+            else:
+                card_columns[i].write(card[0], "of", card[1])
 
     selected_cards = st.multiselect(
         "Select the cards to hold",
@@ -126,8 +128,7 @@ def play_game():
         []
     )
 
-    st.session_state.selected_indices = [i for i, card in enumerate(st.session_state.hand) if
-                                          f"{card[0]} of {card[1]}" in selected_cards]
+    st.session_state.selected_indices = [i for i, card in enumerate(st.session_state.hand) if f"{card[0]} of {card[1]}" in selected_cards]
 
     for i in range(5):
         if i not in st.session_state.selected_indices:
@@ -137,8 +138,9 @@ def play_game():
     score = get_hand_score(st.session_state.hand)
 
     st.subheader("Final Hand:")
-    for i in range(5):
-        st.write(st.session_state.hand[i][0], "of", st.session_state.hand[i][1], "(Value:", hand_values[i], ")")
+    with st.beta_container():
+        for i, card in enumerate(st.session_state.hand):
+            st.write(card[0], "of", card[1], "(Value:", hand_values[i], ")")
 
     if score != "No Win":
         if isinstance(PAY_TABLE[score], dict):
