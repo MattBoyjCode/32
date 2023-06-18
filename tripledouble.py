@@ -114,7 +114,7 @@ def play_game():
         st.session_state.hand = draw_cards(5)
 
     st.subheader("Your Hand:")
-    columns = st.beta_columns(5)
+    columns = st.columns(5)
     with st.beta_container():
         for i, card in enumerate(st.session_state.hand):
             if i in st.session_state.selected_indices:
