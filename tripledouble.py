@@ -1,6 +1,5 @@
 import streamlit as st
 import random
-from streamlit import caching
 
 SUITS = ["Hearts", "Diamonds", "Clubs", "Spades"]
 RANKS = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
@@ -152,8 +151,5 @@ def play_game():
     else:
         winnings = -bet
         st.error("Sorry, you lost. Better luck next time.")
-
-    # Disable Streamlit caching
-    caching.clear_cache()
 
 play_game()
