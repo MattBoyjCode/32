@@ -117,9 +117,11 @@ def play_game():
     columns = st.columns(5)
     for i, card in enumerate(st.session_state.hand):
         if i in st.session_state.selected_indices:
-            columns[i].write("[Selected]", card[0], "of", card[1])
+            with columns[i]:
+                st.write("[Selected]", card[0], "of", card[1])
         else:
-            columns[i].write(card[0], "of", card[1])
+            with columns[i]:
+                st.write(card[0], "of", card[1])
 
     selected_cards = st.multiselect(
         "Select the cards to hold",
